@@ -10,7 +10,11 @@
             "notes": "Scheduled for daily review."
         },
         {
-
+            "task_name": "Make Sentences",
+            "start_time": "19:00:00Z",
+            "end_time": "20:00:00Z",
+            "status": "planned",
+            "notes": "Follow up after Memory Words task."
         }
     ]
 }

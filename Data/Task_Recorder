@@ -1,7 +1,7 @@
 {
     "_id": { "$oid": "68968a4a1ae8ab54502b8196" },
     "name": "Memory Words",
-    "history": [
+    "recoder": [
         { "action": "created",   "time": "2025-08-08T12:00:00Z" },
         { "action": "deleted",   "time": "2025-08-09T12:00:00Z" },
         { "action": "recovered", "time": "2025-08-10T12:00:00Z" },
