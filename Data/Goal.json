@@ -1,0 +1,17 @@
+{
+    "_id": { "$oid": "68968a4a1ae8ab54502b5344" },
+    "name": "English",
+    "parentgoal": null,
+    "subgoal": [
+        {"name": "Vocabulary", "weight": 90, "status": "active"},
+        {"name": "Grammar", "weight": 20, "status": "active"},
+        {"name": "Speaking", "weight": 80, "status": "active"},
+        {"name": "Listening", "weight": 80, "status": "active"},
+        {"name": "Reading", "weight": 40, "status": "active"},
+        {"name": "Writing", "weight": 40, "status": "active"}
+    ],
+    "status": "active",
+    "weight": 100,
+    "description": "Improve English language skills across various domains.",
+    "last_updated": "2025-08-09T10:15:00Z"
+}

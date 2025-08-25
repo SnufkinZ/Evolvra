@@ -1,0 +1,25 @@
+{
+    "_id": { "$oid": "68968a4a1ae8ab54502b8196" },
+    "name": "Memory Words",
+    "observations": [
+        {
+            "text": "Owner likes to do this task before dining.",
+            "source": "ai",
+            "confidence": 80,
+            "evidence": [
+                "2025-08-08T18:48:00Z: started before dinner",
+                "2025-08-07T18:41:00Z: started before dinner"
+            ],
+            "last_updated": "2025-08-09T10:15:00Z"
+        },
+        {
+            "text": "Owner wants to do this task every day.",
+            "source": "owner",
+            "confidence": 99,
+            "evidence": [
+                "2025-08-09T18:59:00Z: Owner talked with AI"
+            ],
+            "last_updated": "2025-08-09T18:59:00Z"
+        }
+    ]
+}

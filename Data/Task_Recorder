@@ -1,0 +1,13 @@
+{
+    "_id": { "$oid": "68968a4a1ae8ab54502b8196" },
+    "name": "Memory Words",
+    "history": [
+        { "action": "created",   "time": "2025-08-08T12:00:00Z" },
+        { "action": "deleted",   "time": "2025-08-09T12:00:00Z" },
+        { "action": "recovered", "time": "2025-08-10T12:00:00Z" },
+        { "action": "finished",  "time": "2025-08-11T12:00:00Z", "note": "Finished Unit 1." },
+        { "action": "finished",  "time": "2025-08-12T12:00:00Z", "note": "Finished Unit 2." },
+        { "action": "unfinished","time": "2025-08-13T12:00:00Z", "note": "Finished half of Unit 3; time was short." },
+        { "action": "delay",     "time": "2025-08-14T12:00:00Z", "note": "Busy day with emergencies." }
+    ]
+}

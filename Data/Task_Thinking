@@ -1,0 +1,34 @@
+{
+    "_id": { "$oid": "68968a4a1ae8ab54502b8196" },
+    "name": "Memory Words",
+    "thinking": [
+        {
+            "text": "This task won't take too long; schedule in fragmented time.",
+            "scope": "scheduling",
+            "source": "ai",
+            "confidence": 60,
+            "last_updated": "2025-08-09T10:15:00Z"
+        },
+        {
+            "text": "Relatively easy for Owner; schedule after high-intensity tasks.",
+            "scope": "energy",
+            "source": "ai",
+            "confidence": 70,
+            "last_updated": "2025-08-09T10:15:00Z"
+        },
+        {
+            "text": "Short, frequent sessions work well; try 3 short sessions/day.",
+            "scope": "strategy",
+            "source": "ai",
+            "confidence": 40,
+            "last_updated": "2025-08-09T10:15:00Z"
+        },
+        {
+            "text": "'Memory Wrods' is strong correlated with 'Make Sentences' task.",
+            "scope": "scheduling",
+            "source": "recoder",
+            "confidence": 80,
+            "last_updated": "2025-08-09T10:15:00Z"
+        }
+    ]
+}
