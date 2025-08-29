@@ -15,13 +15,13 @@
   },
 
   "description": {
-    "field": "Owner wants to use AnkiDroid to do this task.",
+    "field": "I wants to use AnkiDroid to do this task.",
     "source": "owner",
     "confidence": 99,
     "last_updated": "2025-08-09T10:15:00Z"
   },
 
-  "schedule": [
+  "preschedule": [
     {
       "mode": "absolute",
       "start": "2025-08-10T14:00:00Z",
@@ -47,6 +47,24 @@
       "source": "owner",
       "confidence": 99,
       "resolved": false
+    },
+    {
+      "mode": "workflow",
+      "nl_start": "next implement",
+      "window": { "start": "none", "end": "none" },
+      "location": none,
+      "source": "owner",
+      "confidence": 99,
+      "content": "Memory the next unit of words, and at the same time review the previous unit of words.",
+    },
+    {
+      "mode": "workflow",
+      "nl_start": "next implement",
+      "window": { "start": "none", "end": "none" },
+      "location": none,
+      "source": "owner",
+      "confidence": 99,
+      "content": "dictate the words I have learned before.",
     }
   ],
 
