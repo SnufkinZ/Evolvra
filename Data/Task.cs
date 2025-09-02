@@ -1,10 +1,29 @@
 {
-  "_id": { "$oid": "68968a4a1ae8ab54502b8196" },
-
+  "_id": "unique_task_id",
+  "user_id": "owner_user_id",
   "name": "Memory Words",
-  "target_goal": "English::Vocabulary",
-  "weight": 85,
-  "status": "active",
+  "target_goal_ids": [
+    "goal_id_english",
+    "goal_id_vocabulary",
+    "goal_id_listening"
+  ],
+  "status": "active", // active | completed | paused | cancelled
+
+  "dynamic_priority": {
+    "value": 75,
+    "value_factors": {
+      "urgency": 30,
+      "importance": 25,
+      "due_soon": 20,
+      "user_defined": 5,
+      "contextual_relevance": 10,
+      "historical_performance": 5
+    },
+    "value_to_goal": 80,
+    "confidence": 95,
+    "last_updated": "2025-08-09T10:15:00Z",
+    "source": "Me"
+  },
 
   "frequency": {
     "field": "DAILY", // DAILY | WEEKLY | MONTHLY | YEARLY | QUANTITY

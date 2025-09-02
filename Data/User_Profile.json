@@ -1,0 +1,32 @@
+[
+    {
+        "_id": "unique_profile_id",
+        "user_id": "unique_user_id",
+        "created_at": "2025-09-01T16:07:24.191104-06:00",
+        "updated_at": "2025-09-01T16:07:24.191104-06:00",
+        "scope": "system",
+        "version": "1.0",
+        "text": "This table contains information about the owner of this AI assistant. You need to summarize informations from what you and owner talk about to understand the owner's background, personality, preference, habits, potential goals, and interests. Use this information to tailor your responses and suggestions to better suit the owner's needs and preferences.",
+        "confidence": 100
+    },
+    {
+        "_id": "unique_profile_id",
+        "user_id": "unique_user_id",
+        "created_at": "2025-08-09T10:15:00Z",
+        "updated_at": "2025-08-09T10:15:00Z",
+        "scope": "project",
+        "version": "1.0",
+        "text": "Owner is a student learning English. The goal is to improve English language skills across various domains.",
+        "confidence": 40
+    },
+    {
+        "_id": "unique_profile_id",
+        "user_id": "unique_user_id",
+        "created_at": "2025-08-09T10:15:00Z",
+        "updated_at": "2025-08-09T10:15:00Z",
+        "scope": "project",
+        "version": "1.0",
+        "text": "Owner is interested in technology, science fiction, and outdoor activities.",
+        "confidence": 90
+    }
+]
