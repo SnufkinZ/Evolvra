@@ -3,8 +3,21 @@ from database import tasks_collection
 from typing import Dict, Any
 
 # --- Create ---
-async def create_task(task_data: dict) -> str:
+# async def create_task(task_data: dict) -> str:
+#     """Create a new task"""
+#     result = await tasks_collection.insert_one(task_data)
+#     print(f"Task created with ID: {result.inserted_id}")
+#     return str(result.inserted_id)
+
+async def create_task(name: str, description: str, time: str = "", status: str = "", place: str = "") -> str:
     """Create a new task"""
+    task_data = {
+        "name": name,
+        "time": time,
+        "status": status,
+        "description": description,
+        "place": place
+    }
     result = await tasks_collection.insert_one(task_data)
     print(f"Task created with ID: {result.inserted_id}")
     return str(result.inserted_id)

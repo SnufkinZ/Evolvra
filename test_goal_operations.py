@@ -1,6 +1,7 @@
 import asyncio
 import json
-from logic import goal_operations, profile_operations
+from operation_library import goal_operations, profile_operations
+from database import goals_collection, user_profiles_collection
 
 async def run_goal_and_profile_tests():
     print("\n" + "="*20 + " GOAL & PROFILE TESTS " + "="*20)
