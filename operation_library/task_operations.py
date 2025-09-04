@@ -19,6 +19,7 @@ async def get_task_by_id(task_id: str) -> dict | None:
     except Exception:
         return None
 
+# -- Get active tasks ---
 async def get_active_tasks_for_user(user_id: str) -> list[dict]:
     """Find all active tasks"""
     tasks_list = []
