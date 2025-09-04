@@ -1,0 +1,20 @@
+###########
+# Virtual Environments
+venv/
+.venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Dotenv environment files - VERY IMPORTANT
+# This file contains your secret keys (like OPENAI_API_KEY)
+# NEVER upload it to GitHub!
+.env
+
+# IDE and editor files
+.vscode/
+.idea/
+*.DS_Store
