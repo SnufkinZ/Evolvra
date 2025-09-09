@@ -4,7 +4,7 @@ import asyncio
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 from Brain.Functions import defination
-from operation_library import task_operations, goal_operations
+from operation_library import task_repository, goal_operations
 
 load_dotenv()
 
@@ -16,7 +16,7 @@ class AIBrain:
         self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         # 1.【改进】使用函数字典进行动态分发，替代 if/elif
         self.function_registry = {
-            "create_task": task_operations.create_task,
+            "create_task": task_repository.get_overdue_tasks,
             "create_goal": goal_operations.create_goal,
             "update_task": task_operations.update_task,
             "update_goal": goal_operations.update_goal,
