@@ -5,45 +5,21 @@ from typing import List
 import json
 import os
 from operation_library.task_repository import TaskRepository
+from operation_library.goal_repository import GoalRepository
 
 class Brain:
-    def __init__(self, task_repo: TaskRepository):
+    def __init__(self, task_repo: TaskRepository, goal_repo: GoalRepository, user_id: str):
         self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.task_repo = task_repo
-        self.tool_registry = ToolRegistry()
-        self._register_all_tools()
+        self.tool_registry = ToolRegistry() # Placeholder user_id
         self.repository_map = {
-            "task_repo": self.task_repo
+            "task_repo": self.task_repo,
+            "goal_repo": self.goal_repo
         }
+        self._register_all_tools()
 
     def _register_all_tools(self):
-        # Register the get_overdue_tasks tool
-        self.tool_registry.register(
-            name="get_overdue_tasks",
-            source_repo="task_repo",
-            method_name="get_overdue_tasks",
-            description="Retrieve all overdue tasks for the user.",
-            parameters={
-                "type": "object",
-                "properties": {},
-                "required": []
-            }
-        )
-        self.tool_registry.register(
-            name="create_task",
-            source_repo="task_repo",
-            method_name="create",
-            description="Create a new task with a title, description, and optional deadline.",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "title": {"type": "string", "description": "Title of the task"},
-                    "description": {"type": "string", "description": "Detailed description of the task"},
-                    "deadline": {"type": "string", "description": "Deadline for the task in ISO format", "nullable": True}
-                },
-                "required": ["title", "description"]
-            }
-        )
+        self.tool_registry.register_from_repository("task_repo", self.task_repo)
+        self.tool_registry.register_from_repository("goal_repo", self.goal_repo)
 
     async def process_user_message(self, message: str) -> str:
         try:
@@ -54,7 +30,7 @@ class Brain:
                     {"role": "system", "content": "You are a helpful assistant that decides which functions to call based on user requests."},
                     {"role": "user", "content": message}
                 ],
-                tools=self.tool_registry.get_tool_definitions_for_llm(),
+                tools=self.tool_registry.get_definitions_for_llm(),
                 tool_choice="auto"
             )
 
@@ -69,13 +45,13 @@ class Brain:
                     function_name = tool_call.function.name
                     function_args = json.loads(tool_call.function.arguments)
 
-                    tool_info = self.tool_registry.tools.get(function_name)
+                    tool_info = self.tool_registry.get_tool_for_execution(function_name)
                     if not tool_info:
                         execution_results.append(f"Error: Function '{function_name}' is not registered.")
                         continue
                     else:
                         source_repo_name = tool_info["source_repo"]
-                        method_name = tool_info["method_name"]
+                        method_name = tool_info["internal_method_name"]
                     instance_repo = self.repository_map[source_repo_name]
                     result = await getattr(instance_repo, method_name)(**function_args)
                     execution_results.append(str(result)) # 将结果转为字符串并收集
