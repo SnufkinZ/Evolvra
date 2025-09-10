@@ -2,6 +2,7 @@ from operation_library.base_repository import BaseRepository
 from database import tasks_collection
 from datetime import datetime
 from typing import List
+from models.main_models import TaskModel
 
 class TaskRepository(BaseRepository):
     def __init__(self, user_id: str):
@@ -33,7 +34,44 @@ class TaskRepository(BaseRepository):
             }
             # ... define all other task-related tools here ...
         ]
-    
+
+    # This is the specialized "create" method for Tasks
+    async def create_task(self, name: str, description: str, **other_fields) -> TaskModel:
+        """
+        Creates a TaskModel object, validates the data, and persists it to the database.
+        Returns the complete TaskModel object.
+        """
+        # 1. Create a TaskModel instance in memory.
+        task_to_create = TaskModel(
+            user_id=self._user_id, # <-- Inject the user_id from self
+            name=name,
+            description=description,
+            **other_fields
+        )
+        # At this exact moment, Pydantic sees 'id' is missing and calls
+        # the default_factory, generating a new ObjectId.
+        
+        # 2. Convert the Pydantic model to a dictionary suitable for MongoDB.
+        # model_dump(by_alias=True) will correctly use the "_id" key.
+        task_dict = task_to_create.model_dump(by_alias=True)
+
+        # 3. Call the base class's generic internal create method
+        await super()._create(task_dict)
+        
+        # 4. Return the fully-formed object, which now includes the generated ID.
+        return task_to_create
+
+    async def get_task_by_id(self, item_id: str) -> TaskModel | None:
+        # 1. Call the base class's internal method to get the raw dictionary
+        task_dict = await super()._get_by_id(item_id)
+
+        # 2. If data is found, convert it to a TaskModel object before returning
+        if task_dict:
+            return TaskModel(**task_dict)
+        
+        # 3. If no data, return None
+        return None
+
     # --- This is a SPECIALIZED function that only makes sense for tasks ---
     async def get_overdue_tasks(self) -> List[dict]:
         """Retrieves all active tasks for the user whose deadline has passed."""

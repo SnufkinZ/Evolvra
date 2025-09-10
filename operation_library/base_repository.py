@@ -8,12 +8,11 @@ class BaseRepository:
         self._collection = collection
         self._user_id = user_id
 
-    async def create(self, data: dict) -> str:
-        data["user_id"] = self._user_id
+    async def _create(self, data: dict) -> str:
         result = await self._collection.insert_one(data)
         return str(result.inserted_id)
     
-    async def get_by_id(self, item_id: str) -> dict | None:
+    async def _get_by_id(self, item_id: str) -> dict | None:
         try:
             obj_id = ObjectId(item_id)
             item = await self._collection.find_one({"_id": obj_id, "user_id": self._user_id})
