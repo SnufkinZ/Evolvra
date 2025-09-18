@@ -7,6 +7,11 @@
     "goal_id_vocabulary",
     "goal_id_listening"
   ],
+  "target_goal_names": [
+    "English Improvement",
+    "Vocabulary Expansion",
+    "Listening Skills"
+  ],
   "status": "active", // active | completed | paused | cancelled
 
   "dynamic_priority": {
@@ -85,22 +90,13 @@
       "confidence": 99,
       "content": "dictate the words I have learned before.",
     }
-  ],
-
-  "srs_memory": {
-    "enabled": true,
-    "system": "SM2",
-    "deck": "English::Vocabulary",
-    "next_review_at": "2025-08-10T18:00:00Z",
-    "last_review_at": "2025-08-09T18:00:00Z",
-    "ease": 2.5,
-    "interval_days": 3
-  },
+  ]
 
   "metrics": {
     "success_count": 12,
     "failure_count": 3,
-    "last_verified_at": "2025-08-09T22:00:00Z"
+    "created_at": "2025-07-01T09:00:00Z",
+    "last_done_at": "2025-08-09T22:00:00Z"
   },
 
   "tags": ["english", "anki", "study"]

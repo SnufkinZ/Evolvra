@@ -10,8 +10,8 @@ async def get_current_user() -> User:
 
     # ... 从数据库或token获取用户数据 (这是一个字典) ...
     user_data_from_db = {
-        "_id": ObjectId("60d5ec49e7af5a2b5c00a0a0"),
-        "email": "alice@example.com",
+        "_id": ObjectId("abcd001"),
+        "email": "Alice@example.com",
         "name": "Alice",
         "hashed_password": "fakehashedpassword"
     }

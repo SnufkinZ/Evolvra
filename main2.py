@@ -17,6 +17,6 @@ async def process_message_endpoint(
     """
     # The 'brain' instance is already configured for the current user.
     # Its internal TaskRepository already knows the user_id.
-    ai_reply = await brain.process_user_message(user_input.message)
+    ai_reply = await brain.run_conscious_loop(user_input.message)
     
     return AIResponse(response=ai_reply)
