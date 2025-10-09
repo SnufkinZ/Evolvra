@@ -20,7 +20,7 @@ class BaseRepository:
         except Exception:
             return None
         
-    async def get_by_name(self, name: str) -> dict | None:
+    async def _get_by_name(self, name: str) -> dict | None:
         try:
             item = await self._collection.find_one({"name": name, "user_id": self._user_id})
             return item
@@ -36,7 +36,7 @@ class BaseRepository:
         except Exception:
             return None
 
-    async def update(self, item_id: str, update_data: dict) -> int:
+    async def _update(self, item_id: str, update_data: dict) -> int:
         try:
             obj_id = ObjectId(item_id)
 
@@ -59,7 +59,7 @@ class BaseRepository:
             print(f"Error updating item {item_id}: {e}")
             return 0
         
-    async def delete(self, item_id: str) -> int:
+    async def _delete(self, item_id: str) -> int:
         try:
             obj_id = ObjectId(item_id)
             result = await self._collection.delete_one({"_id": obj_id, "user_id": self._user_id})
@@ -68,7 +68,7 @@ class BaseRepository:
             print(f"Error deleting item {item_id}: {e}")
             return 0
 
-    async def get_all(self, filter_query: Dict = None, sort_by: str = None, ascending: bool = True) -> List[dict]:
+    async def _get_all(self, filter_query: Dict = None, sort_by: str = None, ascending: bool = True) -> List[dict]:
         """
         Retrieves all items for the user, with optional filtering and sorting.
         """

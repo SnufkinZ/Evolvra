@@ -7,7 +7,7 @@
         "status": "active",
         "weight": 100,
         "description": "Grow up is the detemined goal of owner to become a better person in all aspects of life.",
-        "last_updated": "2025-08-09T10:15:00Z"
+        "created_at": "2025-08-09T10:15:00Z"
     },
     {
         "_id": "unique_goal_id",
@@ -17,7 +17,7 @@
         "status": "active",
         "weight": 20,
         "description": "Improve English language skills across various domains.",
-        "last_updated": "2025-08-09T10:15:00Z"
+        "created_at": "2025-08-09T10:15:00Z"
     },
     {
         "_id": "unique_goal_id",

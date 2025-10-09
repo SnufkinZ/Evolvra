@@ -1,10 +1,15 @@
 from operation_library.base_repository import BaseRepository
 from database import tasks_collection
 from datetime import datetime
-from typing import List
+from typing import List, Dict, Any
 from models import main_models
 from models.main_models import TaskModel
+from pydantic import ValidationError
 from system_tools import get_current_time
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class TaskRepository(BaseRepository):
     def __init__(self, user_id: str):
@@ -19,26 +24,15 @@ class TaskRepository(BaseRepository):
                 "type": "function", 
                 "function": {
                     "name": "create_task",
-                    "description": "Add a new task to the user's task system.",
+                    "description": "Understands a user's natural language request to create a new task. The request can include the task name, a detailed description, and any scheduling information like 'tomorrow at 5pm' or 'every Friday'.",
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "name": {"type": "string", "description": "The name of the task."},
-                            "description": {"type": "string", "description": "A short description of the task."},
-                            "confidence_to_description": {"type": "integer", "description": "The confidence level of the description (1-100)."},
-                            "target_goal": {"type": "string", "description": "The goal this task is associated with (optional)."},
-                            "priority": {"type": "string", "description": "The priority desciption of the task."},
-                            "confidence_to_priority": {"type": "integer", "description": "The confidence level of the priority (1-100)."},
-                            "frequency": {"type": "string", "description": "The frequency of the task (choose one from DAILY | WEEKLY | MONTHLY | YEARLY | QUANTITY)."},
-                            "number": {"type": "integer", "description": "combined with the field of frequency, e.g. if frequency is DAILY and time is 3, it means every 3 days.If frequency is QUANTITY and time is 3, it means 3 times totally."},
-                            "preschedule_mode": {"type": "string", "description": "The preschedule mode of the task (choose one from absolute | fuzzy | workflow). If there is no any schedule, just fill in None."},
-                            "time": {"type": "string", "description": "The time or date of the task."},
-                            "place": {"type": "string", "description": "The place where the task happens (optional)."},
-                            "confidence_to_schedeule": {"type": "integer", "description": "The confidence level of the schedule including the mode, time and place (1-100)."},
-                            "todo_list": {"type": "array", "items": {"type": "string"}, "description": "A list of to-do items associated with the task (optional)."},
-                            "tags": {"type": "array", "items": {"type": "string"}, "description": "A list of tags associated with the task (optional)."}
+                            "name": {"type": "string", "description": "A concise name for the task, inferred from the user's request."},
+                            "description": {"type": "string", "description": "All other details provided by the user, including the full description, frequency, and any information guiding how to schedule, in a single block of text."},
+                            "schedule": {"type": "string", "description": "Optional. Any scheduling information provided by the user, including time, place, frequency, and deadline, such as 'tomorrow at 5pm in the school' or 'every Friday in my home'."}
                         },
-                        "required": ["name", "description", "confidence_to_description", "priority", "confidence_to_priority", "frequency", "number", "tags"]
+                        "required": ["name", "description"]
                     }
                 },
                 "internal_method_name": "create_task"
@@ -78,126 +72,266 @@ class TaskRepository(BaseRepository):
                     }
                 },
                 "internal_method_name": "get_task_by_name"
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "update_task",
+                    "description": "Update an existing task's details using its unique identifier (ID).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "item_id": {
+                                "type": "string",
+                                "description": "The unique identifier of the task to update."
+                            },
+                            "update_data": {
+                                "type": "object",
+                                "description": "A dictionary containing the fields to update and their new values."
+                            }
+                        },
+                        "required": ["item_id", "update_data"]
+                    }
+                },
+                "internal_method_name": "update_task"
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "delete_task",
+                    "description": "Delete a task using its unique identifier (ID).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "item_id": {
+                                "type": "string",
+                                "description": "The unique identifier of the task to delete."
+                            }
+                        },
+                        "required": ["item_id"]
+                    }
+                },
+                "internal_method_name": "delete_task"
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "list_tasks",
+                    "description": "List all tasks, with optional filtering and sorting.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "filter_by": {
+                                "type": "object",
+                                "description": "Optional. A dictionary to filter tasks, e.g., {'status': 'active'}."
+                            },
+                            "sort_by": {
+                                "type": "string",
+                                "description": "Optional. The field name to sort the tasks by, e.g., 'created_at'."
+                            }
+                        },
+                        "required": []
+                    }
+                },
+                "internal_method_name": "list_tasks"
             }
             # ... define all other task-related tools here ...
         ]
 
     # This is the specialized "create" method for Tasks
-    async def create_task(self, task_data: dict) -> str:
+    async def create_task(self, name: str, description: str, schedule: str = None) -> Dict[str, Any]:
         """
         Creates a TaskModel object, validates the data, and persists it to the database.
         Returns the complete TaskModel object.
         """
-        message = []
-        if task_data["name"] is None:
-            raise ValueError("Task name is required.")
-        if task_data["description"] is None:
-            raise ValueError("Task description is required.")
-        if task_data["confidence_to_description"] is None:
-            raise ValueError("Task confidence_to_description is required.")
-        if task_data["priority"] is None:
-            raise ValueError("Task priority is required.")
-        if task_data["confidence_to_priority"] is None:
-            raise ValueError("Task confidence_to_priority is required.")
-        if task_data["frequency"] is None:
-            raise ValueError("Task frequency is required.")
-        if task_data["number"] is None:
-            raise ValueError("Task number is required.")
-        if task_data["tags"] is None:
-            raise ValueError("Task tags is required.")
-        if task_data["preschedule_mode"]:
-            if task_data["preschedule_mode"] not in ["absolute", "fuzzy", "workflow"]:
-                raise ValueError("preschedule_mode must be one of absolute, fuzzy, workflow or None.")
-            else:
-                if task_data["preschedule_mode"] == "absolute":
-                    preschedule_item = main_models.AbsoluteScheduleModel(
-                        mode="absolute",
-                        time=task_data["time"],
-                        location=task_data["place"],
-                        confidence=task_data["confidence_to_schedeule"],
-                        todo_list=task_data["todo_list"] if "todo_list" in task_data else None)
-                elif task_data["preschedule_mode"] == "fuzzy":
-                    preschedule_item = main_models.FuzzyScheduleModel(
-                        mode="fuzzy",
-                        time=task_data["time"],
-                        location=task_data["place"],
-                        confidence=task_data["confidence_to_schedeule"],
-                        todo_list=task_data["todo_list"] if "todo_list" in task_data else None)
-                else: # workflow
-                    preschedule_item = main_models.WorkflowScheduleModel(
-                        mode="workflow",
-                        time=task_data["time"],
-                        location=task_data["place"],
-                        confidence=task_data["confidence_to_schedeule"],
-                        todo_list=task_data["todo_list"][0] if task_data["todo_list"] else "")
-        if task_data["target_goal"]:
-            try:
-                target_goal_id = await self.get_id_by_name(task_data["target_goal"])
-            except Exception:
-                message.append(f"Warning: The target goal '{task_data['target_goal']}' does not exist. The task will be created without linking to a goal.")
+        logger.info(f"Attempting to create a task for user '{self.user_id}' with data: {name}, {description}, {schedule}")
+        try:
+            task = TaskModel(
+                user_id=self.user_id,
+                name=name,
+                description=description,
+                schedule=schedule,
+                created_at=get_current_time(),
+                status="active" # Default status is active
+            )
+            # 2. Convert the Pydantic model to a dictionary for MongoDB insertion
+            task_dict = task.model_dump(by_alias=True)
+            # 3. Insert into the database using the base class's create method
+            inserted_id = await super()._create(task_dict)
+            logger.info(f"Task '{task.name}' created successfully with ID: {inserted_id}.")
+            return {
+                "status": "success",
+                "message": f"Successfully created the task named'{task.name}'",
+                "data": task_dict
+            }
             
-        current_time = get_current_time()
-        # 1. Create a TaskModel instance in memory.
-        dynamic_priority = main_models.DynamicPriorityModel(value=task_data["priority"], confidence=task_data["confidence_to_priority"], last_updated=current_time)
-        metircs = main_models.MetricsModel(success_count=0, failure_count=0, created_at=current_time, updated_at=current_time)
-        description = main_models.DescriptionModel(filed=task_data["description"], confidence=task_data["confidence_to_description"], last_updated=current_time)
-        frequency = main_models.FrequencyModel(field=task_data["frequency"], number=task_data["number"], last_updated=current_time)
-        task_to_create = TaskModel(
-            user_id=self._user_id, # <-- Inject the user_id from self
-            name=task_data["name"],
-            target_goal_ids = target_goal_id,
-            target_goal_names = task_data["target_goal"],
-            status="active",
-            dynamic_priority=dynamic_priority,
-            frequency=frequency,
-            description=description,
-            metrics=metircs,
-            preschedule=[],
-            tags=task_data["tags"]
-        )
-        # At this exact moment, Pydantic sees 'id' is missing and calls
-        # the default_factory, generating a new ObjectId.
+        except ValidationError as e:
+            error_message = "Task creation failed due to invalid or missing data."
+            logger.warning(f"{error_message} Details: {e.errors()}")
+            return {
+                "status": "failure",
+                "message": error_message,
+                "data": None,
+                "error_details": {
+                    "type": "DataValidationError",
+                    "summary": "The provided data did not pass validation checks.",
+                    "validation_errors": e.errors(), 
+                    "original_input": {"name": name, "description": description, "schedule": schedule}
+                }
+            }
         
-        # 2. Convert the Pydantic model to a dictionary suitable for MongoDB.
-        # model_dump(by_alias=True) will correctly use the "_id" key.
-        task_dict = task_to_create.model_dump(by_alias=True)
+        except Exception as e:
+            error_message = "Task creation failed due to an unexpected internal error."
+            logger.error(f"{error_message} Exception: {e}", exc_info=True)
 
-        # 3. Call the base class's generic internal create method
-        id = await super()._create(task_dict)
-        message.append(f"Success: Task '{task_data['name']}'(id: {id}) has been created.")
-        # 4. Return the fully-formed object, which now includes the generated ID.
-        return message
+            return {
+                "status": "failure",
+                "message": error_message,
+                "data": None,
+                "error_details": {
+                    "type": "InternalServerError",
+                    "summary": "An unexpected error occurred on the server side. This is likely not a problem with the input data.",
+                    "error_info": f"{type(e).__name__}: {str(e)}",
+                    "original_input": {"name": name, "description": description, "schedule": schedule}
+                }
+            }
 
-    async def get_task_by_id(self, item_id: str) -> TaskModel | None:
+
+    async def get_task_by_id(self, item_id: str) -> Dict[str, Any]:
         # 1. Call the base class's internal method to get the raw dictionary
         task_dict = await super()._get_by_id(item_id)
 
         # 2. If data is found, convert it to a TaskModel object before returning
         if task_dict:
-            return TaskModel(**task_dict)
+            logger.info(f"Task found with ID: {item_id}")
+            task_model = TaskModel(**task_dict)  # This will also validate the data
+            return {
+                "status": "success",
+                "message": f"Successfully retrieved task with ID: {item_id}",
+                "data": task_model.model_dump(by_alias=True) # Return as dict with alias (i.e., _id
+                }
         
         # 3. If no data, return None
-        return None
+        else:
+            logger.info(f"Query successful, but no task found with ID: {item_id}")
+            return {
+                "status": "success",
+                "message": f"No task found with ID: {item_id}",
+                "data": None
+            }
     
     async def get_task_by_name(self, name):
-        item = await super().get_by_name(name)
+        item = await super()._get_by_name(name)
         if item:
-            return TaskModel(**item)
-        return None
+            logger.info(f"Task found with name: {name}")
+            task_model = TaskModel(**item)  # Validate and convert to TaskModel
+            return {
+                "status": "success",
+                "message": f"Successfully retrieved task with name: {name}",
+                "data": task_model.model_dump(by_alias=True) # Return as dict with alias (i.e., _id)
+            }
+        else:
+            logger.info(f"Query successful, but no task found with name: {name}")
+            return {
+                "status": "failure",
+                "message": f"No task found with name: {name}",
+                "data": None
+            }
+        
+    async def update_task(self, item_id: str, update_data: dict) -> Dict[str, Any]:
+        logger.info(f"Attempting to update task with ID: {item_id} using data: {update_data}")
+        try:
+            task = TaskModel(**update_data)  # Validate the update data
+            task_dict = task.model_dump(by_alias=True)
+            updated_number = await super()._update(item_id, task_dict)
+            if updated_number == 0:
+                logger.info(f"No task found with ID: {item_id} to update.")
+                return {
+                    "status": "failure",
+                    "message": f"No task found with ID: {item_id} to update.",
+                    "updated_count": 0,
+                    "original_input": update_data
+                }
+            else:
+                logger.info(f"Task with ID: {item_id} updated successfully.")
+                return {
+                    "status": "success",
+                    "message": f"Successfully updated task with ID: {item_id}",
+                    "updated_count": updated_number,
+                    "update_date": update_data
+                }
+        except ValidationError as e:
+            error_message = "Task update failed due to invalid or missing data."
+            logger.warning(f"{error_message} Details: {e.errors()}")
+            return {
+                "status": "failure",
+                "message": error_message,
+                "updated_count": 0,
+                "error_details": {
+                    "type": "DataValidationError",
+                    "summary": "The provided update data did not pass validation checks.",
+                    "validation_errors": e.errors(), 
+                    "original_input": update_data
+                }
+            }
+    
+    async def delete_task(self, item_id: str) -> Dict[str, Any]:
+        # 1. Call the base class's internal method to perform the deletion
+        deleted_count = await super()._delete(item_id)
+
+        # 2. Return a structured response based on the deletion result
+        if deleted_count > 0:
+            logger.info(f"Task with ID: {item_id} deleted successfully.")
+            return {
+                "status": "success",
+                "message": f"Successfully deleted task with ID: {item_id}",
+                "deleted_count": deleted_count
+            }
+        else:
+            logger.info(f"No task found with ID: {item_id} to delete.")
+            return {
+                "status": "failure",
+                "message": f"No task found with ID: {item_id} to delete.",
+                "deleted_count": 0
+            }
 
     # --- This is a SPECIALIZED function that only makes sense for tasks ---
-    async def get_overdue_tasks(self) -> List[dict]:
-        """Retrieves all active tasks for the user whose deadline has passed."""
-        overdue_filter = {
-            "status": "active",
-            "deadline": {"$lt": datetime.now()} # Deadline is less than now
-        }
-        # We can now use the get_all method we inherited from the base class!
-        return await self.get_all(filter_query=overdue_filter)
+    async def list_tasks(filter_by: dict = None, sort_by: str = None) -> Dict[str, Any]:
+        """List all tasks, optionally filtered and sorted."""
+        try:
+            tasks = await super()._get_all(filter_query=filter_by, sort_by=sort_by)
+            logger.info(f"Retrieved {len(tasks)} tasks with filter: {filter_by} and sort: {sort_by}")
+            return {
+                "status": "success",
+                "message": f"Retrieved {len(tasks)} tasks.",
+                "data": tasks
+            }
+        except Exception as e:
+            error_message = "Failed to retrieve tasks due to an unexpected internal error."
+            logger.error(f"{error_message} Exception: {e}", exc_info=True)
+            return {
+                "status": "failure",
+                "message": error_message,
+                "data": None,
+                "error_details": {
+                    "type": "InternalServerError",
+                    "summary": "An unexpected error occurred on the server side while retrieving tasks.",
+                    "error_info": f"{type(e).__name__}: {str(e)}"
+                }
+            }
     
-    async def get_active_tasks(self)-> list[dict]:
-        """Find all active tasks"""
-        active_filter = {
-            "status": "active",
-        }
-        return await self.get_all(filter_query=active_filter)
+    # async def get_overdue_tasks(self) -> List[dict]:
+    #     """Retrieves all active tasks for the user whose deadline has passed."""
+    #     overdue_filter = {
+    #         "status": "active",
+    #         "deadline": {"$lt": datetime.now()} # Deadline is less than now
+    #     }
+    #     # We can now use the get_all method we inherited from the base class!
+    #     return await self.get_all(filter_query=overdue_filter)
+    
+    # async def get_active_tasks(self)-> list[dict]:
+    #     """Find all active tasks"""
+    #     active_filter = {
+    #         "status": "active",
+    #     }
+    #     return await self.get_all(filter_query=active_filter)

@@ -6,7 +6,7 @@ import json
 import os
 from operation_library.task_repository import TaskRepository
 from operation_library.goal_repository import GoalRepository
-from brain_memory.neocortex import NeocortexManager
+from neocortex import NeocortexManager
 from brain_memory.emotion import Emotion
 from llm_provider import LLMProvider
 
