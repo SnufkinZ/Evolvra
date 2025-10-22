@@ -20,12 +20,17 @@ def get_goal_repo(current_user: User = Depends(get_current_user)) -> GoalReposit
 
 
 # --- Brain Dependency ---
-def get_brain(
+async def get_brain(
     task_repo: TaskRepository = Depends(get_task_repo),
     goal_repo: GoalRepository = Depends(get_goal_repo)
 ) -> Brain:
     """
-    This master dependency creates an AIBrain instance and provides it
-    with all the specialized, user-specific repositories it needs.
+    This master dependency is now ASYNC.s
+    It uses the .create() factory to build a fully initialized,
+    ready-to-use Brain instance.
     """
-    return Brain(task_repo=task_repo, goal_repo=goal_repo, user_id=task_repo.user_id)
+    # Instead of calling the constructor directly...
+    # return Brain(task_repo=task_repo, goal_repo=goal_repo, user_id=task_repo.user_id)
+    
+    # ...we now await the asynchronous factory method!
+    return await Brain.create(task_repo=task_repo, goal_repo=goal_repo,user_id=task_repo._user_id)

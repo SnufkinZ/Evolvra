@@ -1,37 +1,70 @@
-from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, List, Dict, Any, Literal, Union
+from pydantic import BaseModel, Field, EmailStr, GetCoreSchemaHandler
+from typing import Optional, List, Dict, Any, Literal, Union, Type
 from datetime import datetime
 from bson import ObjectId
+from pydantic_core import CoreSchema, core_schema, ValidationError
 
-# --- Helper class for MongoDB's ObjectId ---
+# --- Helper class for MongoDB's ObjectId (Pydantic V2 FIX) ---
 class PyObjectId(ObjectId):
-    # ... (the same helper class code as before)
+    """
+    Custom type for MongoDB's ObjectId when used with Pydantic v2.
+    It handles validation and serialization to/from strings.
+    """
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v): raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        
+        def validate_object_id(value: Union[str, ObjectId]) -> ObjectId:
+            """
+            Custom validator that checks if the input is a valid ObjectId 
+            or a valid string representation, and returns an ObjectId instance.
+            """
+            if isinstance(value, ObjectId):
+                return value
+            
+            if not ObjectId.is_valid(value):
+                # Raise Pydantic's internal ValidationError for clear error messages
+                raise ValueError("Invalid ObjectId string")
+            
+            return ObjectId(value)
+
+        # 核心逻辑：定义 Pydantic 应该如何处理这个类型
+        object_id_schema = core_schema.chain_schema(
+            [
+                # 1. 尝试从字符串（API输入）或ObjectId实例（数据库读取）中验证
+                core_schema.union_schema([
+                    core_schema.is_instance_schema(ObjectId),
+                    core_schema.str_schema(min_length=24, max_length=24),
+                ]),
+                # 2. 调用我们的自定义验证函数
+                core_schema.no_info_plain_validator_function(validate_object_id),
+            ],
+            # 3. 序列化（输出到 JSON 时）：强制转换为字符串
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+        return object_id_schema
 
 # --- User Models ---
 # 这是数据库中存储的完整User模型
 class UserModel(BaseModel):
+    # Field(default_factory=PyObjectId) 仍然工作，但 alias="_id" 是关键
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     email: EmailStr
     name: str
     hashed_password: str
 
     class Config:
-        json_encoders = {ObjectId: str} # 让id可以被序列化为字符串
+        # Pydantic v2 不再需要 json_encoders = {ObjectId: str}，
+        # 因为 PyObjectId 类本身已经通过 __get_pydantic_core_schema__ 实现了序列化。
         arbitrary_types_allowed = True
+        populate_by_name = True # 允许通过 alias（_id）进行赋值
+
         
 # 这是我们用来在代码中传递User信息的模型（通常不包含密码）
-# 你在api/auth.py里的 get_current_user 函数，就应该返回这个类型
 class User(BaseModel):
+    # 将 PyObjectId 转换为 str 用于外部 API
     id: str
     email: EmailStr
     name: str
@@ -43,15 +76,15 @@ class GoalModel(BaseModel):
     user_id: str
     name: str
     description: Optional[str] = None
-    parentgoal: Optional[list[str]] = None
+    parent_goal: Optional[list[str]] = None # 修复了原始代码中的 parentgoal 拼写
     weight: int = Field(..., ge=0, le=100)
     created_at: datetime
     updated_at: Optional[datetime] = None
     status: Literal["active", "completed", "paused", "deleted"]
 
     class Config:
-        json_encoders = {ObjectId: str}
         arbitrary_types_allowed = True
+        populate_by_name = True
 
 # --- Profile Model ---
 class ProfileEntryModel(BaseModel):
@@ -62,11 +95,11 @@ class ProfileEntryModel(BaseModel):
     version: int = 1
     scope: Literal["project", "system", "hobby", "habit", "personality"]
     text: str
-    confidence: int = Field(..., ge=0, le=100) # 0-100之间的整数, ... means the field is required
+    confidence: int = Field(..., ge=0, le=100)
 
     class Config:
-        json_encoders = {ObjectId: str}
         arbitrary_types_allowed = True
+        populate_by_name = True
 
 # ----- Task Models set below -----
 # --- Simple, nested data structures ---
@@ -81,8 +114,9 @@ class TaskModel(BaseModel):
     status: Literal["active", "completed", "paused", "deleted"] = "active"
 
     class Config:
-        json_encoders = {ObjectId: str}
         arbitrary_types_allowed = True
+        populate_by_name = True
+
 # class ValueFactorsModel(BaseModel):
 #     urgency: int
 #     importance: int

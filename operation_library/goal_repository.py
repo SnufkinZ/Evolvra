@@ -141,7 +141,7 @@ class GoalRepository(BaseRepository):
         logger.info(f"Attempting to create a goal for user '{self.user_id}' with data: {name}, {description}, {parentgoal}, {weight}")
         try:
             goal = GoalModel(
-                user_id=self.user_id,
+                user_id=self._user_id,
                 name=name,
                 description=description,
                 parentgoal=parentgoal,

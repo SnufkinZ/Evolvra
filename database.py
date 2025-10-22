@@ -1,7 +1,7 @@
 import os
 import redis.asyncio as redis
 from motor.motor_asyncio import AsyncIOMotorClient
-from qdrant_client import QdrantClient, models # Import Qdrant classes
+from qdrant_client import AsyncQdrantClient, models # Import Qdrant classes
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -33,7 +33,7 @@ QDRANT_CLUSTER_URL = os.getenv("QDRANT_CLUSTER_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 if QDRANT_CLUSTER_URL and QDRANT_API_KEY:
     try:
-        qdrant_client = QdrantClient(
+        qdrant_client = AsyncQdrantClient(
             url=QDRANT_CLUSTER_URL,
             api_key=QDRANT_API_KEY,
             timeout=30

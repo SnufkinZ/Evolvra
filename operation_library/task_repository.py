@@ -144,10 +144,10 @@ class TaskRepository(BaseRepository):
         Creates a TaskModel object, validates the data, and persists it to the database.
         Returns the complete TaskModel object.
         """
-        logger.info(f"Attempting to create a task for user '{self.user_id}' with data: {name}, {description}, {schedule}")
+        logger.info(f"Attempting to create a task for user '{self._user_id}' with data: {name}, {description}, {schedule}")
         try:
             task = TaskModel(
-                user_id=self.user_id,
+                user_id=self._user_id,
                 name=name,
                 description=description,
                 schedule=schedule,
